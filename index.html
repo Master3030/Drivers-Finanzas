@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#101827">
@@ -62,6 +83,51 @@ body.dark .topbar{background:rgba(17,28,46,.84);border-color:#26364e;box-shadow:
 @media(max-width:380px){.hero-top{flex-direction:column}.goal-side{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px}.goal-side span{margin:0}.goal-side .btn{margin:0!important}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tab{padding:10px 11px}.brand p{max-width:145px}}
 @media(prefers-reduced-motion:reduce){.page{animation:none!important}.stat,.card,.btn,.tab{transition:none!important}}
 
+
+/* === FIXES FINALES === */
+html, body { overflow-x: hidden; max-width: 100vw; }
+.app, .page, .grid, .card { max-width: 100%; box-sizing: border-box; }
+#page-viajes .grid{ grid-template-columns: 340px 1fr; width:100%; }
+@media(max-width:1100px){ #page-viajes .grid{ grid-template-columns: 300px 1fr; } }
+@media(max-width:900px){
+  #page-viajes .grid{ grid-template-columns: 1fr !important; gap:12px !important; width:100% !important; }
+  #page-viajes .grid > *{ min-width:0 !important; max-width:100% !important; width:100% !important; }
+  #page-viajes .trip-launch-card{ position:static !important; width:100% !important; min-height:auto !important; }
+}
+#page-viajes .table-wrap{ width:100% !important; max-width:100% !important; overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+#page-viajes .table-wrap table{ min-width:560px; }
+
+/* Modal pago no cortado */
+.trip-modal-box{ max-height:92dvh !important; overflow-y:auto !important; display:flex !important; flex-direction:column !important; -webkit-overflow-scrolling:touch; }
+#trip-form{ flex:1; display:flex; flex-direction:column; }
+#trip-step-2{ flex:1; display:flex; flex-direction:column; animation: slideUp .32s cubic-bezier(.16,1,.3,1); }
+#trip-step-2.hidden{ display:none !important; }
+.payment-sheet{ flex:1; display:flex; flex-direction:column; gap:12px; }
+.payment-sheet .sheet-handle{ width:38px; height:5px; background:#d3d9e6; border-radius:10px; margin:0 auto 2px; }
+body.dark .payment-sheet .sheet-handle{ background:#2a3a5a; }
+.payment-sheet .pay-actions{ position:sticky; bottom:0; background:inherit; padding-top:10px; margin-top:auto; display:flex; gap:8px; z-index:2; }
+#trip-preview{ white-space:normal; word-break:break-word; line-height:1.4; }
+
+/* Tabs no cortados */
+.tabs{ padding-right:18px !important; scroll-padding-right:20px; }
+.tabs::after{ content:''; min-width:12px; flex:0 0 12px; }
+.tab{ flex:0 0 auto; }
+
+/* Botones método de pago */
+.payment-options{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.pay-opt{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 6px; border-radius:14px; border:1.5px solid var(--line); background:#f7f9ff; color:#5a6880; font-weight:700; font-size:12px; cursor:pointer; transition:.18s; min-height:68px; }
+.pay-opt span{ font-size:20px; line-height:1; }
+.pay-opt b{ font-size:11px; }
+.pay-opt:hover{ border-color:#b9c7e8; transform:translateY(-1px); }
+.pay-opt.active{ background:linear-gradient(135deg,#3768f5,#5a7ef7); border-color:#3768f5; color:#fff; box-shadow:0 6px 16px rgba(55,104,245,.25); }
+body.dark .pay-opt{ background:#1e2d4a; border-color:#32466a; color:#a9b9d3; }
+body.dark .pay-opt.active{ background:linear-gradient(135deg,#3a6bff,#5d83ff) !important; border-color:#5a84ff !important; color:#fff !important; box-shadow:0 6px 18px rgba(58,107,255,.35) !important; }
+@media(max-width:380px){ .payment-options{ grid-template-columns:1fr; } .pay-opt{ flex-direction:row; min-height:46px; gap:10px; padding:10px 14px; } }
+
+@keyframes slideUp{ from{ opacity:0; transform:translateY(18px);} to{ opacity:1; transform:translateY(0);} }
+.optional-comment summary{ list-style:none; cursor:pointer; font-size:12px; color:var(--muted); font-weight:600; padding:6px 0; }
+.optional-comment summary::-webkit-details-marker{ display:none; }
+
 </style>
 </head>
 <body>
@@ -101,13 +167,36 @@ body.dark .topbar{background:rgba(17,28,46,.84);border-color:#26364e;box-shadow:
         </div>
         <div class="hidden" aria-hidden="true">
           <form id="trip-form">
-            <div class="field"><label>Tipo de servicio</label><div class="service-grid" id="service-grid"><button type="button" class="service active" data-service="Bolt Auto">🚗 Bolt Auto</button><button type="button" class="service" data-service="Bolt Moto">🏍️ Bolt Moto</button><button type="button" class="service" data-service="Uber Auto">🚘 Uber Auto</button><button type="button" class="service" data-service="Uber Moto">🛵 Uber Moto</button></div></div>
-            <div class="field"><label for="trip-date">Fecha del viaje</label><input id="trip-date" type="date" required></div><div class="field"><label for="trip-amount" id="amount-label">Monto bruto del viaje (₲)</label><input id="trip-amount" type="number" min="1" step="1" placeholder="Ej. 25000" required></div>
-            <div class="field" id="commission-field"><label for="trip-commission">Comisión (%)</label><input id="trip-commission" type="number" min="0" max="100" step="0.1" value="25" required><p class="hint" id="commission-hint">Se calcula automáticamente la ganancia después de comisión.</p></div>
-            <div class="field"><label for="trip-payment">Método de pago</label><select id="trip-payment"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option></select></div>
-            <details class="optional-comment"><summary>Agregar comentario (opcional)</summary><div class="field" style="margin-top:9px;margin-bottom:10px"><label for="trip-comment">Comentario</label><textarea id="trip-comment" rows="2" placeholder="Ej. viaje largo, lluvia..."></textarea></div></details>
-            <div class="notice" id="trip-preview">Ganancia estimada: ₲ 0</div>
-            <button class="btn primary full" type="submit">＋ Agregar viaje</button>
+            <div id="trip-step-1">
+              <div class="field"><label>Tipo de servicio</label><div class="service-grid" id="service-grid"><button type="button" class="service active" data-service="Bolt Auto">🚗 Bolt Auto</button><button type="button" class="service" data-service="Bolt Moto">🏍️ Bolt Moto</button><button type="button" class="service" data-service="Uber Auto">🚘 Uber Auto</button><button type="button" class="service" data-service="Uber Moto">🛵 Uber Moto</button></div></div>
+              <div class="field"><label for="trip-date">Fecha del viaje</label><input id="trip-date" type="date" required enterkeyhint="next"></div>
+              <div class="field" id="commission-field"><label for="trip-commission">Comisión (%)</label><input id="trip-commission" type="number" min="0" max="100" step="0.1" value="25" required enterkeyhint="next"><p class="hint" id="commission-hint">Se calcula automáticamente la ganancia después de comisión.</p></div>
+              <div class="field"><label for="trip-amount" id="amount-label">Monto bruto del viaje (₲)</label><input id="trip-amount" type="number" inputmode="numeric" enterkeyhint="next" min="1" step="1" placeholder="Ej. 25000" required></div>
+              <div class="notice" id="trip-preview-step1" style="margin-bottom:12px">Ganancia estimada: ₲ 0</div>
+              <button class="btn primary full" type="button" id="trip-next-btn">Siguiente →</button>
+              <p class="hint" style="text-align:center;margin-top:8px">💡 Tip: al escribir el monto, dale a <b>Siguiente</b> en tu teclado para ir al método de pago</p>
+            </div>
+            <div id="trip-step-2" class="hidden">
+              <div class="payment-sheet">
+                <div class="sheet-handle"></div>
+                <div class="field">
+                  <label>Método de pago</label>
+                  <div class="payment-options" id="payment-options">
+                    <button type="button" class="pay-opt active" data-payment="Efectivo"><span>💵</span><b>Efectivo</b></button>
+                    <button type="button" class="pay-opt" data-payment="Transferencia"><span>🏦</span><b>Transferencia</b></button>
+                    <button type="button" class="pay-opt" data-payment="Tarjeta"><span>💳</span><b>Tarjeta</b></button>
+                  </div>
+                  <input type="hidden" id="trip-payment" value="Efectivo">
+                </div>
+                <details class="optional-comment"><summary>▶ + Agregar comentario (opcional)</summary><div class="field" style="margin-top:9px;margin-bottom:10px"><label for="trip-comment">Comentario</label><textarea id="trip-comment" rows="2" placeholder="Ej. viaje largo, lluvia..."></textarea></div></details>
+                <div class="notice" id="trip-preview">Ganancia estimada: ₲ 0 · Comisión: ₲ 0</div>
+                <p class="hint" id="card-hint" style="display:none">💳 En tarjeta, el monto que ingresaste es tu ganancia directa. Calculamos el bruto al revés sin alterar tus totales.</p>
+                <div class="pay-actions">
+                  <button class="btn full" type="button" id="trip-back-btn">← Volver</button>
+                  <button class="btn primary full" type="submit" id="trip-save-btn">Guardar viaje</button>
+                </div>
+              </div>
+            </div>
           </form>
         </div>
         <div>
@@ -148,7 +237,7 @@ body.dark .topbar{background:rgba(17,28,46,.84);border-color:#26364e;box-shadow:
     </section>
 
     <section class="page" id="page-resumen">
-      <div class="card"><div class="card-head"><div><h2>Resumen financiero</h2><p>Consulta el resultado por período usando fechas locales.</p></div><button class="btn" id="generate-report">Actualizar informe</button></div>
+      <div class="card"><div class="card-head"><div><h2>Resumen financiero</h2><p>Consulta el resultado por período usando fechas locales.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="generate-report">Actualizar informe</button><button class="btn primary" id="download-report-pdf">⬇ PDF</button><button class="btn" id="download-report-excel">⬇ Excel</button></div></div>
         <div class="periods"><button class="period active" data-period="day">Hoy</button><button class="period" data-period="week">Últimos 7 días</button><button class="period" data-period="month">Este mes</button><button class="period" data-period="all">Todo el período</button></div>
         <div class="summary-grid"><div class="summary-tile"><span>Ingresos netos</span><strong id="summary-income">₲ 0</strong></div><div class="summary-tile"><span>Gastos</span><strong id="summary-expenses">₲ 0</strong></div><div class="summary-tile"><span>Ganancia final</span><strong id="summary-net">₲ 0</strong></div></div>
       </div>
@@ -209,11 +298,56 @@ function rowEmpty(cols,msg){return `<tr><td colspan="${cols}" class="empty"><b>$
 function renderTrips(){const filter=$('trip-filter').value,query=($('trip-search')?.value||'').trim().toLowerCase();const list=[...state.trips].reverse().filter(t=>(!filter||t.service===filter)&&(!query||[t.date,t.service,t.payment,t.comment].some(v=>String(v||'').toLowerCase().includes(query))));$('trip-count-label').textContent=`${state.trips.length} ${state.trips.length===1?'viaje registrado':'viajes registrados'}`;$('trips-body').innerHTML=list.length?list.map(t=>`<tr><td>${esc(t.date)}</td><td>${esc(t.service)}</td><td>${t.gross==null?'—':num(t.gross)}</td><td>${esc(t.payment||'—')}</td><td class="money positive">${num(t.net)}</td><td><button class="delete" data-delete-trip="${esc(t.id)}">Eliminar</button></td></tr>`).join(''):rowEmpty(6,'Todavía no hay viajes');$('report-trips-body').innerHTML=[...state.trips].reverse().map(t=>`<tr><td>${esc(t.date)}</td><td>${esc(t.service)}</td><td>${t.gross==null?'—':num(t.gross)}</td><td>${esc(t.payment||'—')}</td><td>${num(t.net)}</td><td>${esc(t.comment||'—')}</td></tr>`).join('')||rowEmpty(6,'Sin viajes')}
 function renderExpenses(){const list=[...state.expenses].reverse();$('expense-count-label').textContent=`${state.expenses.length} ${state.expenses.length===1?'gasto registrado':'gastos registrados'}`;$('expenses-body').innerHTML=list.map(e=>`<tr><td>${esc(e.date)}</td><td>${esc(e.type)}</td><td class="money negative">${num(e.amount)}</td><td>${esc(e.comment||'—')}</td><td><button class="delete" data-delete-expense="${esc(e.id)}">Eliminar</button></td></tr>`).join('')||rowEmpty(5,'Todavía no hay gastos');$('report-expenses-body').innerHTML=list.map(e=>`<tr><td>${esc(e.date)}</td><td>${esc(e.type)}</td><td>${num(e.amount)}</td><td>${esc(e.comment||'—')}</td></tr>`).join('')||rowEmpty(4,'Sin gastos')}
 document.addEventListener('click',e=>{const tb=e.target.closest('[data-delete-trip]');if(tb)ask('Eliminar viaje','Este viaje se eliminará del registro. ¿Continuar?',()=>{const i=state.trips.findIndex(t=>t.id===tb.dataset.deleteTrip);if(i>=0){const t=state.trips[i];state.trips.splice(i,1);if(t.service.startsWith('Bolt')&&!state.bonus.claimed)state.bonus.count=Math.max(0,state.bonus.count-1);save();renderAll();toast('Viaje eliminado')}});const eb=e.target.closest('[data-delete-expense]');if(eb)ask('Eliminar gasto','Este gasto se eliminará del registro. ¿Continuar?',()=>{state.expenses=state.expenses.filter(x=>x.id!==eb.dataset.deleteExpense);save();renderAll();toast('Gasto eliminado')})});
-function updatePreview(){const amount=Number($('trip-amount').value)||0;const commission=selectedService.startsWith('Bolt')?Math.min(100,Math.max(0,Number($('trip-commission').value)||0)):0;const net=selectedService.startsWith('Bolt')?Math.round(amount*(1-commission/100)):amount;$('trip-preview').textContent=`Ganancia estimada: ${money(net)}${selectedService.startsWith('Bolt')?' · Comisión: '+money(amount-net):' · Se registra como monto neto'}`}
+function updatePreview(){
+  const amount=Number($('trip-amount').value)||0;
+  const commission=selectedService.startsWith('Bolt')?Math.min(100,Math.max(0,Number($('trip-commission').value)||0)):0;
+  const paymentEl = $('trip-payment');
+  const payment = paymentEl ? paymentEl.value : 'Efectivo';
+  const isCard = payment.toLowerCase().includes('tarjeta');
+  let net, gross, commissionMoney, label;
+  if(!selectedService.startsWith('Bolt')){
+    net = Math.round(amount);
+    label = `Ganancia estimada: ${money(net)} · Se registra como monto neto`;
+  } else if(isCard){
+    net = Math.round(amount);
+    if(commission >= 100 || commission <= 0) gross = net;
+    else gross = Math.round(net / (1 - commission/100));
+    commissionMoney = Math.max(0, gross - net);
+    label = `💳 Tarjeta · Ganancia directa: ${money(net)} · Bruto calc: ${money(gross)} · Comisión: ${money(commissionMoney)}`;
+  } else {
+    gross = Math.round(amount);
+    net = Math.round(amount * (1 - commission/100));
+    commissionMoney = Math.round(amount - net);
+    label = `Ganancia estimada: ${money(net)} · Comisión: ${money(commissionMoney)}`;
+  }
+  const p = $('trip-preview'); if(p) p.textContent = label;
+  const p1 = $('trip-preview-step1'); if(p1) p1.textContent = label;
+  const hint = $('card-hint'); if(hint) hint.style.display = isCard ? 'block' : 'none';
+  const amountLabel = $('amount-label');
+  if(amountLabel){
+    if(isCard && selectedService.startsWith('Bolt')) amountLabel.textContent = 'Monto neto recibido (lo que te pagó Bolt) (₲)';
+    else amountLabel.textContent = selectedService.startsWith('Bolt') ? 'Monto bruto del viaje (₲)' : 'Monto neto recibido (₲)';
+  }
+}
 function selectService(service){selectedService=service;state.selectedService=service;document.querySelectorAll('.service').forEach(b=>b.classList.toggle('active',b.dataset.service===service));const bolt=service.startsWith('Bolt');$('commission-field').classList.toggle('hidden',!bolt);$('amount-label').textContent=bolt?'Monto bruto del viaje (₲)':'Monto neto recibido (₲)';$('trip-commission').value=state.commission[service]??0;updatePreview();save()}
 document.querySelectorAll('.service').forEach(b=>b.addEventListener('click',()=>selectService(b.dataset.service)));
 $('trip-amount').addEventListener('input',updatePreview);$('trip-commission').addEventListener('input',updatePreview);
-$('trip-form').addEventListener('submit',e=>{e.preventDefault();const amount=Number($('trip-amount').value);const comm=selectedService.startsWith('Bolt')?Number($('trip-commission').value):0;if(!Number.isFinite(amount)||amount<=0||!Number.isFinite(comm)||comm<0||comm>100){toast('Revisa el monto y el porcentaje de comisión.');return}const net=selectedService.startsWith('Bolt')?Math.round(amount*(1-comm/100)):Math.round(amount);const tripDate=$('trip-date').value||today();const t={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date:tripDate,service:selectedService,gross:selectedService.startsWith('Bolt')?Math.round(amount):null,commission:comm,payment:$('trip-payment').value,net,comment:$('trip-comment').value.trim()};state.trips.push(t);if(selectedService.startsWith('Bolt')&&!state.bonus.claimed)state.bonus.count++;save();checkBonus();$('trip-amount').value='';$('trip-comment').value='';$('trip-comment').closest('details').open=false;$('trip-date').value=today();renderAll();updatePreview();closeTripModal();toast('Viaje agregado correctamente')});
+$('trip-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const amount=Number($('trip-amount').value);
+  const comm=selectedService.startsWith('Bolt')?Number($('trip-commission').value):0;
+  if(!Number.isFinite(amount)||amount<=0||!Number.isFinite(comm)||comm<0||comm>100){toast('Revisa el monto y el porcentaje de comisión.');return}
+  const paymentVal = $('trip-payment').value;
+  const isCard = paymentVal.toLowerCase().includes('tarjeta');
+  let net, gross;
+  if(!selectedService.startsWith('Bolt')){ net = Math.round(amount); gross = null; }
+  else if(isCard){ net = Math.round(amount); if(comm>=100||comm<=0) gross = net; else gross = Math.round(net / (1 - comm/100)); }
+  else { gross = Math.round(amount); net = Math.round(amount * (1 - comm/100)); }
+  const tripDate=$('trip-date').value||today();
+  const t={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date:tripDate,service:selectedService,gross:gross,commission:comm,payment:paymentVal,net,comment:$('trip-comment').value.trim()};
+  state.trips.push(t);
+  if(selectedService.startsWith('Bolt')&&!state.bonus.claimed)state.bonus.count++;
+  save();checkBonus();$('trip-amount').value='';$('trip-comment').value='';$('trip-comment').closest('details').open=false;$('trip-date').value=today();renderAll();updatePreview();closeTripModal();toast('Viaje agregado correctamente')});
 $('trip-filter').addEventListener('change',renderTrips);$('trip-search').addEventListener('input',renderTrips);$('clear-trip-filter').addEventListener('click',()=>{$('trip-filter').value='';renderTrips()});
 $('expense-form').addEventListener('submit',e=>{e.preventDefault();const amount=Number($('expense-amount').value);if(!Number.isFinite(amount)||amount<=0){toast('Ingresa un monto de gasto válido.');return}state.expenses.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date:$('expense-date').value||today(),type:$('expense-type').value,amount:Math.round(amount),comment:$('expense-comment').value.trim()});save();$('expense-amount').value='';$('expense-comment').value='';$('expense-date').value=today();renderAll();toast('Gasto agregado correctamente')});
 function renderHero(){const net=todayNet(),income=incomeTotal(tripsToday()),expense=expenseTotal(expensesToday()),all=incomeTotal(state.trips)-expenseTotal(state.expenses);$('hero-net').textContent=money(net);$('hero-sub').textContent=net>=0?'Buen trabajo. Sigue registrando cada movimiento.':'Tus gastos de hoy superan tus ingresos netos.';$('stat-income').textContent=money(income);$('stat-expenses').textContent=money(expense);$('stat-trips').textContent=tripsToday().length;$('stat-total').textContent=money(all);$('hero-goal').textContent=state.goal>0?money(state.goal):'Sin definir';const pct=state.goal>0?Math.max(0,Math.min(100,net/state.goal*100)):0;$('goal-fill').style.width=pct+'%';$('goal-percent').textContent=Math.round(pct)+'%';$('goal-progress-label').textContent=state.goal>0?`${money(Math.max(0,state.goal-net))} para alcanzar la meta`:'Configura una meta diaria para ver tu progreso';const payments=tripsToday();$('cash-transfer-total').textContent=money(incomeTotal(payments.filter(t=>t.payment==='Efectivo'||t.payment==='Transferencia')));$('card-total').textContent=money(incomeTotal(payments.filter(t=>t.payment==='Tarjeta')));$('commission-total').textContent=money(payments.reduce((s,t)=>s+Math.max(0,(Number(t.gross)||0)-(Number(t.net)||0)),0))}
@@ -225,7 +359,85 @@ $('reset-cash').addEventListener('click',()=>ask('Borrar conteo','Se pondrán to
 function dateWithin(date,period){const d=safeDate(date),now=safeDate(today());if(period==='all')return true;if(period==='day')return date===today();if(period==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();const from=new Date(now);from.setDate(from.getDate()-6);from.setHours(0,0,0,0);return d>=from&&d<=now}
 function renderSummary(){const trips=state.trips.filter(t=>dateWithin(t.date,summaryPeriod)),expenses=state.expenses.filter(x=>dateWithin(x.date,summaryPeriod)),inc=incomeTotal(trips),exp=expenseTotal(expenses);$('summary-income').textContent=money(inc);$('summary-expenses').textContent=money(exp);$('summary-net').textContent=money(inc-exp);$('report-date').textContent=`Generado el ${today()} · Período: ${{day:'hoy',week:'últimos 7 días',month:'este mes',all:'todo el período'}[summaryPeriod]}`;$('report-trips').textContent=trips.length;$('report-expense-count').textContent=expenses.length;$('report-net').textContent=money(incomeTotal(state.trips)-expenseTotal(state.expenses));const dates=new Set([...state.trips.map(t=>t.date),...state.expenses.map(x=>x.date)]);const sorted=[...dates].sort().reverse();$('daily-summary-body').innerHTML=sorted.map(date=>{const i=incomeTotal(state.trips.filter(t=>t.date===date)),g=expenseTotal(state.expenses.filter(x=>x.date===date)),net=i-g;return `<tr><td>${esc(date)}</td><td>${num(i)}</td><td>${num(g)}</td><td class="money ${net<0?'negative':'positive'}">${num(net)}</td></tr>`}).join('')||rowEmpty(4,'Todavía no hay movimientos')}
 document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click',()=>{summaryPeriod=b.dataset.period;document.querySelectorAll('[data-period]').forEach(x=>x.classList.toggle('active',x===b));renderSummary()}));
-$('generate-report').addEventListener('click',()=>{renderSummary();toast('Informe actualizado')});$('print-btn').addEventListener('click',()=>{switchPage('resumen');renderSummary();setTimeout(()=>window.print(),100)});
+
+$('generate-report').addEventListener('click',()=>{renderSummary();toast('Informe actualizado')});
+$('print-btn').addEventListener('click',()=>{switchPage('resumen');renderSummary();setTimeout(()=>window.print(),100)});
+
+// --- 2 pasos ---
+function showTripStep(n){
+  const s1=$('trip-step-1'), s2=$('trip-step-2');
+  if(!s1||!s2) return;
+  if(n===1){ s1.classList.remove('hidden'); s2.classList.add('hidden'); }
+  else { s1.classList.add('hidden'); s2.classList.remove('hidden'); s2.scrollIntoView({behavior:'smooth', block:'nearest'}); }
+}
+function validateAndGoStep2(){
+  const amount = Number($('trip-amount').value);
+  if(!amount || amount<1){ toast('Ingresa el monto del viaje'); $('trip-amount').focus(); return false; }
+  updatePreview();
+  showTripStep(2);
+  setTimeout(()=>{ const el=$('trip-payment'); if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 200);
+  return true;
+}
+$('trip-next-btn')?.addEventListener('click', validateAndGoStep2);
+$('trip-back-btn')?.addEventListener('click', ()=> showTripStep(1));
+const _amt = $('trip-amount');
+if(_amt){
+  _amt.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.keyCode === 13){
+      if(_amt.value && Number(_amt.value)>=1){ e.preventDefault(); validateAndGoStep2(); }
+    }
+  });
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Tab' && document.activeElement && document.activeElement.id==='trip-amount'){
+    if($('trip-amount').value){ e.preventDefault(); validateAndGoStep2(); }
+  }
+});
+
+// --- Botones método de pago ---
+function setPaymentMethod(method){
+  const input=$('trip-payment'); if(input) input.value=method;
+  document.querySelectorAll('.pay-opt').forEach(b=> b.classList.toggle('active', b.dataset.payment===method));
+  updatePreview();
+}
+document.querySelectorAll('.pay-opt').forEach(btn=>{ btn.addEventListener('click', ()=> setPaymentMethod(btn.dataset.payment)); });
+setTimeout(()=> setPaymentMethod('Efectivo'), 300);
+
+// Reset paso 1 al abrir modal
+$('open-trip-modal')?.addEventListener('click', ()=> showTripStep(1));
+$('trip-form')?.addEventListener('submit', ()=> setTimeout(()=> showTripStep(1), 400));
+
+// --- Descargar reportes ---
+function _getRange(){
+  const now=new Date(); const toStr=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  if(summaryPeriod==='day') return {start:today(), end:today()};
+  if(summaryPeriod==='week'){ const s=new Date(); s.setDate(now.getDate()-6); return {start:toStr(s), end:today()}; }
+  if(summaryPeriod==='month'){ const s=new Date(now.getFullYear(), now.getMonth(), 1); return {start:toStr(s), end:today()}; }
+  return null;
+}
+$('download-report-pdf')?.addEventListener('click', ()=>{
+  renderSummary();
+  const card=$('report-card'); if(!card){ toast('No hay informe'); return; }
+  const win=window.open('', '_blank'); if(!win){ toast('Permite ventanas emergentes'); return; }
+  const styles=document.querySelector('style').outerHTML;
+  win.document.write(`<html><head><title>Reporte</title>${styles}<style>body{padding:20px;background:#fff}.card{box-shadow:none;border:1px solid #e5eaf2}.no-print{display:none}</style></head><body>${card.outerHTML}<script>window.onload=()=>{window.print(); setTimeout(()=>window.close(),300)}<\/script></body></html>`);
+  win.document.close();
+});
+$('download-report-excel')?.addEventListener('click', ()=>{
+  renderSummary();
+  const range=_getRange();
+  const fTrips = range ? state.trips.filter(t=> t.date >= range.start && t.date <= range.end) : state.trips;
+  const fExp = range ? state.expenses.filter(x=> x.date >= range.start && x.date <= range.end) : state.expenses;
+  if(fTrips.length===0 && fExp.length===0){ toast('No hay datos en este período'); return; }
+  const lines=[['REPORTE FINANZAS - '+summaryPeriod.toUpperCase()+' - '+today()],[],['Tipo','Fecha','Servicio/Categoría','Monto bruto','Comisión %','Pago','Neto/Monto','Comentario']];
+  fTrips.forEach(t=>lines.push(['Viaje',t.date,t.service,t.gross??'',t.commission??0,t.payment,t.net,t.comment]));
+  fExp.forEach(x=>lines.push(['Gasto',x.date,x.type,'','','',x.amount,x.comment]));
+  lines.push([]); lines.push(['Resumen','Ingresos netos',$('summary-income').textContent,'Gastos',$('summary-expenses').textContent,'Ganancia',$('summary-net').textContent]);
+  const csv='\ufeff'+lines.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`reporte-finanzas-${summaryPeriod}-${today()}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast('Reporte Excel descargado');
+});
+
 function renderBonus(){const b=state.bonus;$('bonus-trip-goal').value=b.target??'';$('bonus-amount').value=b.amount??'';$('bonus-amount-display').textContent=b.amount?money(b.amount):'₲ 0';const pct=b.target?Math.min(100,b.count/b.target*100):0;$('bonus-fill').style.width=pct+'%';$('bonus-progress-text').textContent=b.target?`${b.count} de ${b.target} viajes Bolt completados (${Math.round(pct)}%)`:'Configura una meta de viajes para comenzar.';$('bonus-status').textContent=!b.target?'Sin configurar':b.claimed?'Bono registrado':b.count>=b.target?'Meta alcanzada':'En progreso';$('bonus-status').classList.toggle('ready',!!b.target&&(b.claimed||b.count>=b.target))}
 function checkBonus(){const b=state.bonus;if(b.target&&b.amount&&!b.claimed&&b.count>=b.target){b.claimed=true;state.trips.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+'bonus',date:today(),service:'Bono',gross:null,commission:0,payment:'Bono',net:Math.round(b.amount),comment:`Bono automático por ${b.target} viajes Bolt`});save();toast('¡Meta de bono alcanzada! Se agregó el bono a tus ingresos.')}}
 $('bonus-form').addEventListener('submit',e=>{e.preventDefault();const target=Math.floor(Number($('bonus-trip-goal').value)),amount=Number($('bonus-amount').value);if(target<1||amount<=0){toast('Introduce una meta y un bono mayores a cero.');return}state.bonus.target=target;state.bonus.amount=Math.round(amount);state.bonus.claimed=false;save();checkBonus();renderAll();toast('Meta de bono guardada')});
@@ -248,5 +460,5 @@ function renderAll(){renderTrips();renderExpenses();renderHero();renderBonus();r
 $('trip-date').value=today();$('expense-date').value=today();renderCashFields();selectService(selectedService);renderAll();
 })();
 </script>
-</body>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
                                                                                                                                                                                                    </html>
